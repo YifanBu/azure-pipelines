@@ -6,7 +6,7 @@ pool:
 
 variables:
   IMAGE_REGISTRY_CONNECTION: 'Docker Hub'
-  IMAGE_REGISTRY: ''
+  IMAGE_REGISTRY: 'StaticSiteDemo'
   IMAGE_REPOSITORY: 'ivanbuau'
   TAG: '$(Build.BuildId)'
 
@@ -21,4 +21,18 @@ stages:
           repository: '$(IMAGE_REPOSITORY)'
           command: 'buildAndPush'
           Dockerfile: '**/Dockerfile'
-          tags: '$(TAG)'
+        
+  - stage: Deploy
+    displayName: Deploy the container
+    dependsOn: BuildApp
+    jobs:
+    - job: 'Deploy'
+      displayName: 'Deploy job'
+      pool:
+        vmImage: 'ubuntu-20.04'
+      steps:
+        - task: AzureWebAppContainer@1
+          inputs:
+            appName: $(WebAppName)
+            azureSubscription: 'Resource Manager - Tailspin - Space Game'
+            imageName: $(IMAGE_REGISTRY_CONNECTION)/$(IMAGE_REPOSITORY):$(Build.BuildId)
